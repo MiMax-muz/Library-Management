@@ -1,10 +1,10 @@
 # Quản lý thư viện — Tổng quan hệ thống và phân công thành viên
 
-Bản phân công cho nhóm 4 người, triển khai quản lý thư viện và tìm/đọc sách điện tử bằng HTML/CSS/JavaScript, PHP, MySQL. Repository dùng main và tv1–tv4. Hiện có khung B0 và giao diện mẫu UniLib tại frontend/prototype; giao diện chạy với dữ liệu mô phỏng, chưa tích hợp backend và chưa đạt B1.
+Bản phân công cho nhóm 4 người, triển khai quản lý thư viện và tìm/đọc sách điện tử bằng HTML/CSS/JavaScript, PHP, MySQL. Repository dùng main và tv1–tv4. Đã hoàn thiện phần nền TV1 trước tuần 1 và tuần 1: khung UniLib, API nền, PDO, phiên/quyền, schema/seed và kiểm tra. Prototype vẫn dùng dữ liệu mô phỏng. Chưa phát hành B1 toàn nhóm vì còn đầu ra TV2–TV4 và các quyết định nghiệp vụ cần thống nhất. Xem mục 10 để chạy và tích hợp.
 
-README có nội dung: **hệ thống có những phần nào, ai chịu trách nhiệm frontend/backend/file chung và phải bàn giao chức năng gì**. Lịch và đầu việc theo thời gian chỉ ghi trong [kế hoạch triển khai](KE_HOACH_THEO_TUAN.md); không dùng README làm lịch giao việc hằng tuần.
+README có nội dung: **hệ thống có những phần nào, ai chịu trách nhiệm frontend/backend/file chung và phải bàn giao chức năng gì**. Lịch và đầu việc theo thời gian chỉ ghi trong [kế hoạch triển khai](../ITTV-LibraryManagement-docs/KE_HOACH_THEO_TUAN.md); không dùng README làm lịch giao việc hằng tuần.
 
-Yêu cầu được cập nhật ngày 21/10/2026 từ báo cáo UML và tài liệu business rule người dùng cung cấp. [Đặc tả nghiệp vụ](DAC_TA_NGHIEP_VU.md) ghi đầy đủ 42 use case, 25 business rule, quyền theo actor, tiêu chí nghiệm thu và các điểm còn cần chốt. Đây là cập nhật đặc tả/kế hoạch; mã nguồn vẫn ở B0. Giữ phân công 4 thành viên hiện tại, không thay bằng danh sách thành viên trong báo cáo nguồn.
+Yêu cầu được cập nhật ngày 21/10/2026 từ báo cáo UML và tài liệu business rule người dùng cung cấp. [Đặc tả nghiệp vụ](../ITTV-LibraryManagement-docs/DAC_TA_NGHIEP_VU.md) ghi đầy đủ 42 use case, 25 business rule, quyền theo actor, tiêu chí nghiệm thu và các điểm còn cần chốt. Đặc tả nghiệp vụ giữ nguyên; trạng thái triển khai TV1 được cập nhật ngày 23/10/2026 ở mục 10. Giữ phân công 4 thành viên hiện tại, không thay bằng danh sách thành viên trong báo cáo nguồn.
 
 ## 1. Nguyên tắc làm việc
 
@@ -42,11 +42,11 @@ TV1 chịu thêm việc nền tảng nên kế hoạch dành giai đoạn đầu
 
 ### Giao diện mẫu đã bổ sung
 
-Bộ giao diện từ `Front end.zip` được lưu trong `frontend/prototype/`, giữ cấu trúc gốc để chạy thử. Mở `frontend/index.html` bằng Live Server rồi chọn **Mở giao diện mẫu UniLib**. Không mở bằng `file://` vì giao diện dùng JavaScript ES modules.
+Bộ giao diện từ `Front end.zip` được lưu trong `frontend/prototype/`, giữ cấu trúc gốc để chạy thử. Chạy ứng dụng theo mục 10, chọn **Giao diện mẫu UniLib**; có thể dùng Live Server để xem riêng prototype. Không mở bằng `file://` vì giao diện dùng JavaScript ES modules.
 
 Tài khoản demo: `student`, `librarian`, `staff`, `admin`; mật khẩu chung `123456`. Dữ liệu được lưu mô phỏng bằng LocalStorage, chưa có xác thực hay kết nối backend thật. Việc bổ sung này không thay đổi trạng thái bản nền B0 thành B1.
 
-TV1 quản lý prototype tham khảo; cả nhóm không cùng sửa `prototype/assets/js/main.js`. Tuần 1 chuyển màn hình ưu tiên sang module, các màn hình còn lại chuyển ở tuần triển khai chức năng tương ứng. TV1 tiếp nhận bố cục, menu, CSS chung; mỗi thành viên phụ trách phần mình theo bảng dưới. Các module hiện tại là cấu trúc triển khai chính; prototype chạy độc lập.
+TV1 quản lý prototype tham khảo; cả nhóm không cùng sửa `prototype/assets/js/main.js`. TV1 đã tách shell/CSS UniLib vào shared trong tuần 1; các thành viên chuyển màn hình ưu tiên sang module, các màn hình còn lại chuyển ở tuần triển khai chức năng tương ứng. TV1 tiếp nhận bố cục, menu, CSS chung; mỗi thành viên phụ trách phần mình theo bảng dưới. Các module hiện tại là cấu trúc triển khai chính; prototype chạy độc lập.
 
 | Người | Màn hình trong prototype | Module đích |
 |---|---|---|
@@ -100,7 +100,7 @@ Mỗi folder chức năng chứa routes.js, các file HTML màn hình, file Java
 | notifications | notification-list.html, notifications.js | Hiển thị đúng người nhận; cung cấp thành phần cho TV1 nối menu ở đợt tích hợp |
 | reports | dashboard.html, report-detail.html, settings.html, reports.js | Lọc/xuất dữ liệu, kiểm tra trạng thái tải/trống/lỗi; không tự tính lại nghiệp vụ nguồn |
 
-Cây thư mục và bảng trên mô tả cấu trúc đích; books/ebooks/shared đã có một số file khung B0, các module khác hiện giữ thư mục chờ triển khai. Routes riêng theo hợp đồng TV1 chốt. Tuần 1 thử giao diện độc lập với dữ liệu mẫu; từ tuần 2 dùng khung B1 đã bàn giao. Bỏ chế độ mẫu khỏi luồng sản phẩm khi nối API thật.
+Cây thư mục và bảng trên mô tả cấu trúc đích; books/ebooks còn là khung cho tuần 2–3; shared đã có nền tuần 1, các module khác hiện giữ thư mục chờ triển khai. Routes riêng theo hợp đồng TV1 chốt. Tuần 1 thử giao diện độc lập với dữ liệu mẫu; từ tuần 2 dùng khung B1 đã bàn giao. Bỏ chế độ mẫu khỏi luồng sản phẩm khi nối API thật.
 
 ### Quy trình chuyển giao diện sang module
 
@@ -281,47 +281,96 @@ Mẫu ghi chú đầu file riêng:
  */
 ```
 
-## 10. Bản chuẩn bị B0 của TV1 — trước tuần 1
+## 10. Bàn giao TV1 — trước tuần 1 và tuần 1 (23/10/2026)
 
-Bộ file trên nhánh tv1 là khung để bắt đầu công việc, chưa phải B1 và chưa phải ứng dụng chạy đầy đủ. Commit/push giao diện và tài liệu trên tv1 chỉ là bàn giao để xem xét, không đồng nghĩa đã tích hợp vào main hoặc phát hành B1. Các file khung backend/SQL có thể còn là thay đổi cục bộ và không thuộc đợt bổ sung giao diện này. Các file PHP shared và lớp module chỉ ghi nhiệm vụ, chưa khai báo lớp; route hiện là danh sách rỗng. schema.sql và seed.sql chưa có lệnh tạo bảng hoặc dữ liệu. jobs giữ thư mục chờ tuần 5. Không bổ sung mã vào module TV2–TV4.
+### Phần đã hoàn thành
 
-### File đã chuẩn bị và thời điểm triển khai
+- Giữ nguyên prototype tham khảo; tách CSS, shell, sidebar, topbar, hero và panel UniLib sang frontend/shared. Không import JavaScript hay dữ liệu LocalStorage của prototype vào ứng dụng chính.
+- Trang đầu vào nạp module qua hash router; có trạng thái tải/lỗi/không tìm thấy, hủy request và cleanup khi đổi trang. Menu hỗ trợ máy tính, tablet và điện thoại.
+- API client cùng nguồn xử lý JSON, 204, Blob, lỗi mạng/HTTP, CSRF và hết phiên. shared/ui cung cấp trạng thái, toast và dialog.
+- PHP có router tham số, 404/405, response thống nhất, PDO dùng chung, lỗi nội bộ không lộ chi tiết, session cookie HttpOnly/SameSite và CSRF cho request thay đổi dữ liệu.
+- Auth đọc lại trạng thái/vai trò từ DB mỗi request có xác thực, xoay session ID khi đăng nhập/đăng xuất. AccountService tuần 2 của TV4 gọi Auth sau khi kiểm tra mật khẩu; hiện không có API đăng nhập giả.
+- Schema/seed gồm 13 bảng nền cho tài khoản, nhân viên, độc giả/thẻ, danh mục, sách/bản sách, cấu hình và nhật ký. Chưa tạo bảng mượn/trả/eBook của tuần sau. Bộ tính phạt tuần 2 nhận tham số, chưa cần bảng phiếu phạt.
 
-| Nhóm | File/phạm vi | Khi triển khai |
-|---|---|---|
-| Giao diện mẫu | frontend/prototype: index.html, assets, pages, docs | Đã bổ sung; chuyển dần về module từ tuần 1 |
-| Frontend chung | index.html, app.js, config.js, shared/api.js, session.js, layout.js, ui.js, styles.css | Tuần 1 |
-| Backend chung | public/index.php, bootstrap.php, config.php, routes.php; shared/Router.php, Database.php, Response.php, Auth.php, ApiException.php, Logger.php | Tuần 1 |
-| Sách | frontend/books: routes, 5 màn hình và books.js; backend/books: routes và BookController/Service/Repository | Tuần 2; kiểm kê tuần 4 |
-| eBook | frontend/ebooks: routes, 4 màn hình, ebooks.js, reader.js; backend/ebooks: routes và EbookController/Service/Repository | Tuần 3; mượn có hạn tuần 4, nối tiến độ tuần 5 |
-| Dữ liệu | database/schema.sql, seed.sql, migrations/ | Schema/seed B1 trong tuần 1; migration theo từng nền |
-| Công cụ và tài liệu | .editorconfig, .gitignore, README, KE_HOACH_THEO_TUAN.md | Chuẩn bị B0 |
+Đây là phần code TV1 tuần 1 đã kiểm tra, **chưa phải B1 toàn nhóm đã nghiệm thu hoặc đã merge**. Chưa triển khai CRUD books tuần 2, PDF tuần 3, các module riêng TV2–TV4. Thư mục books/ebooks giữ khung hiện có, không cung cấp endpoint giả trả thành công.
 
-Tên lớp shared là vị trí dự kiến để TV1 hoàn thiện trong tuần 1, chưa phải API PHP có thể gọi. Không dùng file khung làm dependency đã hoàn thành.
+### Cài mới và chạy
 
-### Phạm vi sửa và nhánh
+Đã kiểm tra bằng PHP 8.2.12 (pdo_mysql), MariaDB 10.4.32 của XAMPP, Node 24 cho kiểm tra HTTP. Chưa kiểm tra riêng trên Oracle MySQL. Các lệnh dưới chạy ở thư mục gốc repository bằng PowerShell; đổi đường dẫn chương trình nếu máy không dùng XAMPP.
 
-TV1 sửa file chung, database, jobs, books, ebooks và tài liệu. TV2 sửa readers/bookshelf; TV3 sửa loans/fines; TV4 sửa accounts/notifications/reports. Thiết kế dữ liệu và nhu cầu thay đổi shared do chủ module gửi TV1 xem xét.
+1. Bật MySQL trong XAMPP. Tạo database mới, không dùng database có dữ liệu sản phẩm. Chạy từng lệnh, chỉ chạy tiếp nếu lệnh trước thành công:
 
-Quy trình nhánh áp dụng theo mục 9 của KE_HOACH_THEO_TUAN.md: làm trên tv1–tv4, PR vào main và kiểm tra trước khi gộp. Không sử dụng develop trong quy trình này. main là nhánh mặc định; giao diện và tài liệu được push trên tv1 để kiểm tra trước khi gộp.
+~~~powershell
+& C:/xampp/mysql/bin/mysql.exe -u root -e "CREATE DATABASE ittv_library CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+& C:/xampp/mysql/bin/mysql.exe -u root ittv_library -e "source database/schema.sql"
+& C:/xampp/mysql/bin/mysql.exe -u root ittv_library -e "source database/seed.sql"
+~~~
 
-### Quy ước đầu vào B0 để nhóm xem xét
+Nếu root có mật khẩu, thêm -p để nhập tương tác. schema.sql/seed.sql chỉ nhập một lần trên DB trống; không chạy lại hoặc xóa DB đang dùng. Các lần nâng cấp sau dùng migration do TV1 chốt.
 
-Các quy ước dưới đây là đề xuất khởi đầu. Nhóm cần thống nhất trước khi dùng làm hợp đồng; chữ ký router, API client, PDO và Auth thực thi được chốt trong B1. Không coi route ví dụ là endpoint đã có.
+2. Đặt biến môi trường trong cửa sổ chạy PHP rồi khởi động:
 
-- Frontend dùng ES modules, HTML màn hình là fragment nạp vào #app-content. Khung duy nhất có menu ở index.html; CSS module dùng tiền tố books- hoặc ebooks-. File nhiều từ dùng kebab-case; lớp PHP dùng PascalCase; hàm/biến dùng camelCase; trường JSON nghiệp vụ dùng snake_case.
-- Route giao diện dự kiến dùng hash: #/books, #/books/:sach_id, #/ebooks, #/ebooks/:ebook_id, #/ebooks/:ebook_id/read. File routes.js dự kiến xuất routes; mỗi mục có path và mount(context). Router truyền container, params; mount trả hàm cleanup để tháo sự kiện/tài nguyên khi rời trang. Chưa hiện thực router ở B0.
-- API cùng nguồn, tiền tố /api; URL dự kiến GET /api/books, GET /api/books/:sach_id, GET /api/ebooks/:ebook_id. API quản trị và API đọc PDF phải có quyền backend; chi tiết quyền từng endpoint được chủ module đề xuất trước tuần thực hiện.
-- Danh sách dự kiến nhận page (bắt đầu từ 1), page_size, q; bộ lọc nghiệp vụ và giới hạn trang phải chốt trong hợp đồng. Không tự chọn tên cột SQL từ tham số đầu vào.
-- JSON thành công dự kiến: {"data": {"sach_id": 1}, "error": null}. Danh sách đặt mảng trong data và có meta gồm page, page_size, total. JSON lỗi dự kiến: {"data": null, "error": {"code": "VALIDATION_ERROR", "message": "Dữ liệu không hợp lệ", "details": {"field": "sach_id"}}}. Các ví dụ chỉ mô tả định dạng.
-- HTTP status dự kiến: 200 đọc/cập nhật, 201 tạo, 204 thành công không có body, 400 request sai, 401 chưa đăng nhập, 403 không đủ quyền/chủ sở hữu, 404 không tìm thấy, 405 method sai, 409 xung đột, 422 dữ liệu sai, 500 lỗi nội bộ, 503 nền chưa sẵn sàng. Frontend phải xử lý cả phản hồi không có body. PDF thành công dùng Content-Type: application/pdf và nội dung tệp, không bọc JSON.
-- Trường dự kiến: tai_khoan_id, doc_gia_id, the_doc_gia_id, sach_id, ban_sach_id, phieu_muon_id; dữ liệu điện tử giữ ebook_id, file_version và page bắt đầu từ 1. TV1 chốt ánh xạ cột SQL/JSON trước khi có schema; không tạo bảng lịch sử mượn riêng trong readers.
-- Trước khi bàn giao API, ghi method/path, input/output, quyền/chủ sở hữu, trạng thái, lỗi, ví dụ, dữ liệu thử và bản nền cần có. Dùng thông số đã xác định trong đặc tả; không tự chọn phụ phí mất/hỏng, cách tính ngày hoặc các chính sách còn mở ở mục 5 của đặc tả.
+~~~powershell
+$env:DB_HOST = '127.0.0.1'
+$env:DB_PORT = '3306'
+$env:DB_NAME = 'ittv_library'
+$env:DB_USER = 'root'
+# Đặt DB_PASSWORD theo cấu hình máy; mặc định rỗng cho XAMPP cục bộ.
+$env:SESSION_SECURE = '0'
+& C:/xampp/php/php.exe -S 127.0.0.1:8080 -t frontend backend/dev-router.php
+~~~
 
-### Cách xem và giới hạn kiểm tra B0
+3. Mở [UniLib cục bộ](http://127.0.0.1:8080). Trang chủ hiển thị kết quả kết nối API và DB thật. Live Server chỉ phù hợp xem prototype; không thực thi PHP. File .env.example là danh sách biến, PHP không tự nạp .env.
 
-Mở frontend/index.html bằng Live Server, chọn Mở giao diện mẫu UniLib. Có thể mở frontend/prototype/index.html trực tiếp qua cùng máy chủ HTTP. Dùng student, librarian, staff hoặc admin với mật khẩu 123456; đăng xuất trước khi đổi vai trò. Không mở bằng file://. Trang chính vẫn là khung B0; chỉ prototype có giao diện demo. Bộ mẫu có 38 trang HTML đã kiểm tra đường dẫn tài nguyên tĩnh, chưa nghiệm thu thao tác trình duyệt hoặc luồng đầu cuối. Khi phát hành sản phẩm, bỏ liên kết demo và không phục vụ thư mục prototype; có thể giữ bản mẫu trong mã nguồn để tham khảo.
+Document root phải là frontend, không phải gốc repository. dev-router.php chỉ dùng phát triển cục bộ; khi triển khai dùng web server ánh xạ /api về backend/public/index.php, HTTPS với SESSION_SECURE=1 và loại prototype khỏi nội dung được phục vụ.
 
-backend/public/index.php chỉ trả HTTP 503 với mã SYSTEM_NOT_READY nếu chạy qua PHP. Chưa có kết nối MySQL, xác thực, endpoint nghiệp vụ hoặc lệnh cài/chạy ứng dụng được xác nhận. Chưa chọn phiên bản PHP/MySQL ở B0; TV1 ghi phiên bản thực tế sau khi kiểm tra trong tuần 1. Đợt bổ sung giao diện này không kiểm thử PHP/MySQL; cần xác nhận riêng khi chuẩn bị B1.
+Tài khoản seed có các vai trò student/librarian/staff/admin, email miền example.test và hash cố ý vô hiệu để không tạo mật khẩu mặc định. Chúng dùng làm dữ liệu nền cho service; TV4 tạo hash bằng password_hash khi thử xác thực. Tài khoản demo 123456 chỉ thuộc prototype, không đăng nhập được ứng dụng chính.
 
-Khi chuẩn bị B1: hoàn thiện router/API client/PDO/phiên/quyền, cấu hình môi trường, schema/seed cho tuần 2; kiểm tra trang đầu vào, API kiểm tra và kết nối DB; ghi rõ cách chạy, kết quả kiểm tra và giới hạn. Chỉ đánh dấu B1 sau khi các điều kiện bàn giao đạt.
+### Hợp đồng nền đã thực thi
+
+| API | Kết quả |
+|---|---|
+| GET /api/health | 200: data.status = ok |
+| GET /api/health/db | 200 nếu kết nối và bảng tai_khoan tồn tại; 503 DATABASE_NOT_READY nếu chưa sẵn sàng |
+| GET /api/session | data.user (null nếu khách), data.csrf_token; không trả hash mật khẩu |
+
+JSON thành công có data và error:null; danh sách có thể thêm meta. JSON lỗi có data:null, error gồm code/message/details. Response::json(data, status, meta) hỗ trợ 204 không body. API chưa tồn tại trả 404; sai method trả 405 và Allow. Request thay đổi dữ liệu cần cookie phiên và X-CSRF-Token lấy từ /api/session. Token được đổi sau Auth::login/logout, vì vậy TV4 gọi refreshSession sau đăng nhập/đăng xuất. Không tự retry POST khi lỗi CSRF.
+
+Backend module xuất callable từ routes.php: function (Router $router, array $config): void. Router::add(method, '/api/module/:id', handler) truyền mảng params vào handler. Controller tự đọc/kiểm tra input; service gọi Auth::requireRoles(PDO, roles), không tin vai trò từ trình duyệt. PDO lấy bằng Database::connection($config['db']); repository dùng cùng PDO và không tự commit. Nhóm vai trò thống nhất student, librarian, staff, admin theo UniLib.
+
+Frontend module xuất routes, mỗi route có path, title (nếu hiện menu), icon, roles (tùy chọn) và mount(context). Context gồm container, params, signal. Mount có thể async và trả hàm cleanup; dùng signal cho fetch/listener, kiểm tra signal.aborted trước khi ghi DOM sau await. shared/home.js là ví dụ chạy thật. TV1 thêm import và đăng ký route của module khi tích hợp; thành viên không sửa app.js hoặc shared. Đường dẫn hash chưa đăng ký trả trang không tìm thấy.
+
+Gọi request('/path', {method, body, signal}) từ shared/api.js; body là object JSON hoặc FormData. responseType:'blob' cho nội dung tệp. currentUser/canAccess chỉ phục vụ hiển thị; backend kiểm tra quyền thật. Khi 401, client phát session-expired và xóa trạng thái người dùng.
+
+### Dữ liệu và quyết định nền
+
+- ID là BIGINT UNSIGNED; khóa ngoại giữ lịch sử, không cascade xóa. Email/MSSV, mã đầu sách/bản sách/thẻ là duy nhất; MSSV cho nhân viên có thể null.
+- Bốn trạng thái bản sách: available, borrowed, damaged, lost. Tồn khả dụng lọc available và dang_luu_hanh=1; API tuần 2 còn phải kiểm tra đầu sách đang lưu hành và cấm xóa/ngừng bản đang mượn. Schema không thay thế nghiệp vụ transaction.
+- Vị trí theo mã thể loại: MA_THE_LOAI-KE (ví dụ CNTT-A01). Khóa ngoại kép ngăn đặt bản sách vào vị trí khác thể loại. Tuần 2 không đổi thể loại đầu sách đã có bản; muốn chuyển phải có thao tác đồng bộ riêng, không tắt foreign key.
+- Quyết định kỹ thuật TV1 cho tuần 2: staff và admin đều được tạo/quản lý sách theo UC-TV04/29; các vai trò khác chỉ tra cứu khi API được triển khai. Quyền này chưa được coi là endpoint tuần 1.
+- Seed lưu các giới hạn đã xác nhận: 3/lần, 7 tổng, 14 ngày, gia hạn 2 lần × tối đa 7 ngày, quá hạn tối đa 1 ngày để xét, 2.000 VNĐ/cuốn/ngày, eBook 3/lần và 14 ngày.
+- Phụ phí, nguồn giá bồi thường, cách làm tròn ngày và thời hạn thẻ để NULL chờ chốt. Ngày trên thẻ seed là fixture, không phải chính sách. Email/MSSV đều có trường, nhưng cách đăng nhập do TV4 đề xuất trước nghiệm thu B1. Múi giờ và cách tính ngày phải được chốt trước bộ tính phạt, không suy ra từ timezone máy.
+
+### Kiểm tra và kết quả
+
+Ngày 23/10/2026 đã kiểm tra:
+
+- Cú pháp PHP và JavaScript hợp lệ.
+- Nhập schema/seed vào MariaDB thử riêng; API báo kết nối DB thành công.
+- 19 kiểm tra nền: route tham số, 404/405, CSRF, khách/sai quyền, xoay session, khóa tài khoản làm mất phiên, trùng email/MSSV/mã bản, vị trí sai thể loại, hạn thẻ, trạng thái bản và tồn khả dụng.
+- HTTP: health, DB, phiên khách, CSRF sai/đúng, method, route thiếu và không lộ backend/SQL/.env qua web. API client đã kiểm tra 204, Blob, 401, lỗi HTTP/mạng, hủy request và tự lấy CSRF.
+- Trình duyệt Edge: trang chủ, kiểm tra lại kết nối, route không tồn tại, quay về, lỗi DB, menu mobile; desktop 1440px, tablet 800px, mobile 390px. Không có lỗi JavaScript và không tràn ngang.
+
+Chạy lại kiểm tra PHP trên DB thử mới có tên kết thúc _test, đã nhập schema/seed:
+
+~~~powershell
+$env:DB_NAME = 'ittv_week1_test'
+& C:/xampp/php/php.exe backend/tests/week1.php
+$env:TEST_URL = 'http://127.0.0.1:8080'
+node backend/tests/http.mjs
+node backend/tests/api-client.mjs
+~~~
+
+Máy chủ thử phải dùng cùng DB thử; đặt DB_PORT tương ứng trước khi chạy cả PHP server và test. week1.php rollback toàn bộ thay đổi kiểm thử. browser.cjs cần Playwright trong môi trường kiểm thử và trình duyệt đã cài; có thể đặt BROWSER_PATH. Ảnh kiểm tra lưu dưới backend/storage và không commit. HTTP test không sửa dữ liệu.
+
+B1 toàn nhóm chỉ được phát hành sau khi nhận màn hình/thiết kế TV2–TV4, thống nhất chính sách còn mở, kiểm tra chéo PR và tích hợp. Commit/push trên tv1 là bàn giao code để kiểm tra; chưa tạo tag B1 hoặc tích hợp vào main.

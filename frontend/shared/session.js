@@ -1,4 +1,10 @@
-/* Phụ trách: TV1. Bản hiện tại: B0 — file khung, chưa triển khai.
- * Tuần 1: quản lý thông tin người dùng hiện tại cho giao diện. Backend luôn kiểm tra quyền; không dùng dữ liệu trình duyệt làm căn cứ phân quyền.
- */
-export {};
+// TV1: trạng thái giao diện; backend luôn là nơi quyết định quyền.
+import { request, setCsrfToken } from './api.js';
+let user = null;
+export function currentUser() { return user; }
+export function canAccess(roles = []) { return !roles.length || Boolean(user && roles.includes(user.vai_tro)); }
+export async function refreshSession() {
+  const result = await request('/session'); user = result.data.user;
+  setCsrfToken(result.data.csrf_token); return user;
+}
+window.addEventListener('session-expired', () => { user = null; });

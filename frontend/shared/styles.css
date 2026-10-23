@@ -1,3 +1,643 @@
-/* TV1 — B0: vị trí dành cho kiểu chung; triển khai từ tuần 1.
- * CSS của module dùng tiền tố books- hoặc ebooks- để tránh xung đột.
- */
+/* TV1: tiếp nhận nguyên bộ kiểu UniLib; không phụ thuộc runtime prototype. */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+
+:root {
+    font-family: 'DM Sans', sans-serif;
+    color: #16352f;
+    background: #f5f8f7
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    margin: 0
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit
+}
+
+button {
+    cursor: pointer
+}
+
+a {
+    color: inherit;
+    text-decoration: none
+}
+
+.shell {
+    display: flex;
+    min-height: 100vh
+}
+
+.sidebar {
+    width: 255px;
+    background: #102d29;
+    color: #d3e7e1;
+    padding: 28px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: auto;
+    flex-shrink: 0
+}
+
+.logo {
+    font: 800 26px Manrope;
+    color: white;
+    letter-spacing: -1px;
+    padding: 3px 15px 22px
+}
+
+.logo span {
+    color: #8ae5b6
+}
+
+.role {
+    background: #20463e;
+    border: 1px solid #376154;
+    padding: 12px 14px;
+    border-radius: 14px;
+    margin: 0 9px 25px;
+    font-size: 12px;
+    color: #b8d5cb
+}
+
+.role strong {
+    display: block;
+    color: white;
+    font-size: 15px;
+    margin-top: 5px
+}
+
+.nav-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #7aa99b;
+    margin: 20px 15px 10px
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 12px 14px;
+    border-radius: 11px;
+    margin: 3px 0;
+    font-size: 13px
+}
+
+.nav:hover {
+    background: #1b443b
+}
+
+.nav.active {
+    background: #2c745c;
+    color: white;
+    font-weight: 700
+}
+
+.nav .glyph {
+    font-size: 17px;
+    width: 22px;
+    text-align: center
+}
+
+.main {
+    flex: 1;
+    min-width: 0
+}
+
+.topbar {
+    height: 78px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border-bottom: 1px solid #e4eeea;
+    padding: 0 36px
+}
+
+.crumb {
+    font-size: 13px;
+    color: #7a9188
+}
+
+.top-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center
+}
+
+.avatar {
+    background: #d9f5e5;
+    color: #126247;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-weight: 800
+}
+
+.content {
+    max-width: 1400px;
+    margin: auto;
+    padding: 34px 38px 60px
+}
+
+.eyebrow {
+    color: #268565;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase
+}
+
+.heading {
+    font: 800 clamp(24px, 3vw, 34px) Manrope;
+    letter-spacing: -1.2px;
+    margin: 7px 0
+}
+
+.sub {
+    color: #7a9188;
+    font-size: 14px;
+    margin: 0 0 28px
+}
+
+.hero {
+    background: linear-gradient(120deg, #134e40, #1e8262);
+    color: white;
+    border-radius: 22px;
+    padding: 30px 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 25px;
+    margin-bottom: 24px;
+    box-shadow: 0 16px 30px #1b74551a
+}
+
+.hero h2 {
+    font: 800 25px Manrope;
+    margin: 5px 0
+}
+
+.hero p {
+    color: #d0e9dd;
+    margin: 0;
+    font-size: 13px
+}
+
+.hero .big {
+    font-size: 65px
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px
+}
+
+.stat,
+.panel,
+.book-card {
+    background: white;
+    border: 1px solid #e4eeea;
+    border-radius: 18px;
+    box-shadow: 0 7px 22px #1e584708
+}
+
+.stat {
+    padding: 21px
+}
+
+.stat .num {
+    font: 800 29px Manrope;
+    margin: 9px 0 2px
+}
+
+.stat .lbl {
+    color: #71887f;
+    font-size: 12px
+}
+
+.panel {
+    padding: 24px;
+    margin-bottom: 22px
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 20px
+}
+
+.panel h3 {
+    font: 800 17px Manrope;
+    margin: 0
+}
+
+.toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px
+}
+
+.input,
+.select {
+    padding: 12px 14px;
+    border: 1px solid #dbe8e1;
+    border-radius: 11px;
+    background: white;
+    outline: none;
+    min-width: 0;
+    color: #234239
+}
+
+.input:focus,
+.select:focus {
+    border-color: #37a77e;
+    box-shadow: 0 0 0 3px #37a77e18
+}
+
+.grow {
+    flex: 1
+}
+
+.btn {
+    border: 0;
+    border-radius: 11px;
+    background: #197a59;
+    color: white;
+    padding: 11px 16px;
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap
+}
+
+.btn:hover {
+    background: #116548
+}
+
+.btn.light {
+    background: #e9f6ef;
+    color: #166b50
+}
+
+.btn.outline {
+    background: white;
+    color: #236c55;
+    border: 1px solid #d1e5db
+}
+
+.btn.danger {
+    background: #fff0ee;
+    color: #c04444
+}
+
+.btn:disabled {
+    opacity: .45;
+    cursor: not-allowed
+}
+
+.grid-books {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 17px
+}
+
+.book-card {
+    overflow: hidden
+}
+
+.cover {
+    height: 155px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #d6f0e4, #f1f6dc);
+    font-size: 70px
+}
+
+.book-body {
+    padding: 18px
+}
+
+.book-body h3 {
+    font: 800 15px Manrope;
+    margin: 6px 0
+}
+
+.muted {
+    color: #82948d;
+    font-size: 12px
+}
+
+.pill {
+    display: inline-block;
+    border-radius: 30px;
+    padding: 5px 10px;
+    background: #e4f6ed;
+    color: #17815d;
+    font-size: 11px;
+    font-weight: 800
+}
+
+.pill.warn {
+    background: #fff1dc;
+    color: #b97712
+}
+
+.pill.bad {
+    background: #ffe9e7;
+    color: #ba4444
+}
+
+.book-actions {
+    display: flex;
+    gap: 7px;
+    margin-top: 15px;
+    flex-wrap: wrap
+}
+
+.table-wrap {
+    overflow: auto
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px
+}
+
+th {
+    text-align: left;
+    background: #f6faf8;
+    color: #6c8b7c;
+    font-size: 11px;
+    letter-spacing: .5px;
+    padding: 14px
+}
+
+td {
+    padding: 15px 14px;
+    border-bottom: 1px solid #edf3ef
+}
+
+tr:last-child td {
+    border-bottom: 0
+}
+
+.empty {
+    text-align: center;
+    padding: 55px 15px;
+    color: #81988d
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #102a2788;
+    display: grid;
+    place-items: center;
+    z-index: 20;
+    padding: 20px
+}
+
+.modal {
+    background: white;
+    padding: 28px;
+    border-radius: 20px;
+    width: min(530px, 100%);
+    max-height: 90vh;
+    overflow: auto
+}
+
+.modal h3 {
+    font: 800 22px Manrope;
+    margin: 0 0 18px
+}
+
+.field {
+    display: grid;
+    gap: 7px;
+    margin-bottom: 13px;
+    font-size: 12px;
+    font-weight: 700
+}
+
+.field .input {
+    width: 100%
+}
+
+.toast {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    background: #123d32;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px #0003;
+    z-index: 40;
+    max-width: 350px
+}
+
+.split {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px
+}
+
+.progress {
+    height: 9px;
+    border-radius: 8px;
+    background: #e4f1ea;
+    overflow: hidden
+}
+
+.progress span {
+    display: block;
+    height: 100%;
+    background: #21936c
+}
+
+.login-wrap {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr
+}
+
+.login-art {
+    background: linear-gradient(150deg, #0d3d33, #167e5c);
+    display: grid;
+    place-items: center;
+    color: white;
+    padding: 55px
+}
+
+.login-art h1 {
+    font: 800 48px Manrope;
+    max-width: 520px
+}
+
+.login-form {
+    display: grid;
+    place-items: center;
+    padding: 35px
+}
+
+.login-card {
+    width: min(400px, 100%)
+}
+
+.login-card h2 {
+    font: 800 29px Manrope
+}
+
+.demo {
+    background: #f0f8f4;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 2
+}
+
+.mobile-menu {
+    display: none
+}
+
+@media(max-width:900px) {
+    .sidebar {
+        width: 76px;
+        padding: 22px 8px
+    }
+
+    .logo {
+        font-size: 0;
+        padding: 5px 0 22px;
+        text-align: center
+    }
+
+    .logo:after {
+        content: 'U';
+        font-size: 24px
+    }
+
+    .role,
+    .nav-title,
+    .nav .nav-label {
+        display: none
+    }
+
+    .nav {
+        justify-content: center
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr)
+    }
+
+    .content {
+        padding: 24px
+    }
+
+    .topbar {
+        padding: 0 24px
+    }
+}
+
+@media(max-width:650px) {
+    .sidebar {
+        display: none
+    }
+
+    .mobile-menu {
+        display: block
+    }
+
+    .topbar {
+        height: 65px;
+        padding: 0 15px
+    }
+
+    .content {
+        padding: 20px 15px
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 9px
+    }
+
+    .stat {
+        padding: 15px
+    }
+
+    .stat .num {
+        font-size: 22px
+    }
+
+    .hero {
+        padding: 23px
+    }
+
+    .hero .big {
+        display: none
+    }
+
+    .split {
+        grid-template-columns: 1fr
+    }
+
+    .login-wrap {
+        grid-template-columns: 1fr
+    }
+
+    .login-art {
+        display: none
+    }
+
+    .toolbar .input {
+        width: 100%
+    }
+
+    .grid-books {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px
+    }
+
+    .cover {
+        height: 115px
+    }
+
+    .book-body {
+        padding: 12px
+    }
+
+    .book-actions .btn {
+        font-size: 11px;
+        padding: 9px
+    }
+}
+/* Hỗ trợ truy cập và trạng thái của khung chung. */
+:focus-visible { outline: 3px solid #268565; outline-offset: 3px; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+.notice { padding: 14px 18px; border-radius: 12px; background: #edf7f1; margin-bottom: 20px; }
+.status-error { color: #a52e35; }
+@media(max-width: 650px) {
+  .sidebar.is-open { display: block; position: fixed; width: 255px; z-index: 20; left: 0; top: 65px; height: calc(100vh - 65px); }
+  .sidebar.is-open .nav { justify-content: flex-start; }
+  .sidebar.is-open .nav-label, .sidebar.is-open .nav-title, .sidebar.is-open .role { display: block; }
+}

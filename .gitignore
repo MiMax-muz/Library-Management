@@ -1,0 +1,16 @@
+# Biến môi trường và dữ liệu riêng trên máy phát triển.
+.env
+.env.*
+!.env.example
+/backend/storage/*
+!/backend/storage/ebooks/
+/backend/storage/ebooks/*
+!/backend/storage/ebooks/.gitignore
+# Dependency, nhật ký và file của công cụ soạn thảo.
+node_modules/
+vendor/
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

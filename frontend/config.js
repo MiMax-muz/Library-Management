@@ -1,4 +1,2 @@
-/* TV1: cấu hình công khai dự kiến. Tuần 1 nối vào API client; không chứa bí mật. */
-export const config = Object.freeze({
-  apiBaseUrl: '/api',
-});
+// TV1: API cùng nguồn; không chứa khóa bí mật hoặc bật mock trong sản phẩm.
+export const config = Object.freeze({ apiBaseUrl: '/api' });
