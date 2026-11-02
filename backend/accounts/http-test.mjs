@@ -1,0 +1,56 @@
+// Chạy với TEST_URL, DB_NAME (*_test), TEST_ADMIN_PASSWORD trên DB thử đã cài B1.
+import assert from 'node:assert/strict';
+
+const base = process.env.TEST_URL;
+if (!base || !/^https?:\/\/127\.0\.0\.1(?::\d+)?$/.test(base)) throw new Error('TEST_URL phải là localhost 127.0.0.1.');
+if (!process.env.DB_NAME?.endsWith('_test')) throw new Error('DB_NAME phải kết thúc bằng _test.');
+if (!process.env.TEST_ADMIN_PASSWORD) throw new Error('Thiếu TEST_ADMIN_PASSWORD.');
+let cookie = '', csrf = '';
+async function call(method, path, body, includeCsrf = true) {
+  const headers = { Accept: 'application/json' };
+  if (cookie) headers.Cookie = cookie;
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (includeCsrf && method !== 'GET') headers['X-CSRF-Token'] = csrf;
+  const response = await fetch(base + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), redirect: 'manual' });
+  const setCookie = response.headers.get('set-cookie');
+  if (setCookie) cookie = setCookie.split(';', 1)[0];
+  const result = await response.json();
+  return { status: response.status, ...result };
+}
+let session = await call('GET', '/api/session');
+assert.equal(session.status, 200); csrf = session.data.csrf_token;
+const suffix = Date.now().toString(36);
+const student = { email: `tv4-${suffix}@example.test`, mssv: `TV4${suffix.toUpperCase()}`, ho_ten: 'Sinh viên TV4', password: 'student-pass-123' };
+assert.equal((await call('POST', '/api/accounts/register', student, false)).error.code, 'CSRF_INVALID');
+const registered = await call('POST', '/api/accounts/register', student);
+assert.equal(registered.status, 201);
+assert.equal(registered.data.vai_tro, 'student');
+assert.equal(registered.data.has_profile, false);
+assert.equal((await call('POST', '/api/accounts/register', student)).status, 409);
+assert.equal((await call('POST', '/api/accounts/login', { identifier: student.mssv, password: 'bad-password' })).status, 401);
+const studentLogin = await call('POST', '/api/accounts/login', { identifier: student.mssv.toLowerCase(), password: student.password });
+assert.equal(studentLogin.status, 200); csrf = studentLogin.data.csrf_token;
+assert.equal((await call('GET', '/api/accounts')).status, 403);
+const changed = await call('PATCH', '/api/accounts/me/password', { current_password: student.password, new_password: 'changed-pass-123' });
+assert.equal(changed.status, 200); csrf = changed.data.csrf_token;
+assert.equal((await call('POST', '/api/accounts/logout')).status, 200);
+session = await call('GET', '/api/session'); csrf = session.data.csrf_token;
+assert.equal(session.data.user, null);
+assert.equal((await call('POST', '/api/accounts/login', { identifier: student.email, password: student.password })).status, 401);
+const secondLogin = await call('POST', '/api/accounts/login', { identifier: student.email, password: 'changed-pass-123' });
+assert.equal(secondLogin.status, 200); csrf = secondLogin.data.csrf_token;
+await call('POST', '/api/accounts/logout');
+session = await call('GET', '/api/session'); csrf = session.data.csrf_token;
+const adminLogin = await call('POST', '/api/accounts/login', { identifier: process.env.TEST_ADMIN_EMAIL || 'admin@example.test', password: process.env.TEST_ADMIN_PASSWORD });
+assert.equal(adminLogin.status, 200); csrf = adminLogin.data.csrf_token;
+const accounts = await call('GET', '/api/accounts');
+assert.equal(accounts.status, 200);
+assert.ok(accounts.data.every(item => !('mat_khau_hash' in item)));
+const employee = await call('POST', '/api/employees', { ma_nhan_vien: `N${suffix.toUpperCase()}`, ho_ten: 'Nhân viên TV4', email: `staff-${suffix}@example.test`, chuc_vu: 'Thủ thư', vai_tro: 'librarian', password: 'staff-pass-123' });
+assert.equal(employee.status, 201);
+const stopped = await call('PATCH', `/api/employees/${employee.data.nhan_vien_id}`, { trang_thai: 'inactive' });
+assert.equal(stopped.data.account_status, 'locked');
+await call('POST', '/api/accounts/logout');
+session = await call('GET', '/api/session'); csrf = session.data.csrf_token;
+assert.equal((await call('POST', '/api/accounts/login', { identifier: `staff-${suffix}@example.test`, password: 'staff-pass-123' })).status, 401);
+console.log('PASS: TV4 HTTP/CSRF/session/account/employee flow');
