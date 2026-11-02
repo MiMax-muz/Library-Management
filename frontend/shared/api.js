@@ -24,7 +24,7 @@ export async function request(path, { method = 'GET', body, signal, responseType
   const isJson = response.headers.get('content-type')?.includes('application/json');
   if (!response.ok) {
     const result = isJson ? await response.json().catch(() => null) : null;
-    if (response.status === 401) { csrfToken = null; window.dispatchEvent(new Event('session-expired')); }
+    if (response.status === 401 && result?.error?.code !== 'INVALID_CREDENTIALS') { csrfToken = null; window.dispatchEvent(new Event('session-expired')); }
     if (result?.error?.code === 'CSRF_INVALID') csrfToken = null;
     throw new ApiError(result?.error?.message || 'Máy chủ không xử lý được yêu cầu.', response.status, result?.error?.code || 'HTTP_ERROR', result?.error?.details);
   }
