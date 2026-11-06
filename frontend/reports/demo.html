@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Xem trước báo cáo TV4 | UniLib</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="content">
+    <div class="eyebrow">TV4 · TUẦN 3</div>
+    <h1 class="heading">Xem trước báo cáo và chính sách</h1>
+    <p class="sub">Trang thử giao diện độc lập, không cần đăng nhập hoặc database.</p>
+    <nav class="report-preview-nav" aria-label="Chọn màn hình xem trước">
+      <a class="btn outline" href="?view=reports">Báo cáo nền</a>
+      <a class="btn outline" href="?view=settings">Form chính sách</a>
+    </nav>
+    <label class="report-scenario">Thử trạng thái giao diện
+      <select class="select" id="demo-scenario">
+        <option value="normal">Có dữ liệu</option>
+        <option value="empty">Chưa có dữ liệu</option>
+        <option value="error-once">Lỗi một lần, rồi thử lại</option>
+        <option value="error">Lỗi liên tục</option>
+      </select>
+    </label>
+    <div id="app-content"></div>
+  </main>
+  <script type="module">
+    import { mountReports, mountSettings } from './reports.js';
+    import { createDemoReportSource } from './data.js';
+    const params = new URLSearchParams(location.search);
+    const view = params.get('view');
+    const scenario = params.get('scenario') || 'normal';
+    const container = document.getElementById('app-content');
+    const signal = new AbortController().signal;
+    const select = document.getElementById('demo-scenario');
+    select.value = scenario;
+    select.addEventListener('change', () => {
+      const next = new URL(location.href);
+      next.searchParams.set('scenario', select.value);
+      location.href = next.href;
+    });
+    (view === 'settings' ? mountSettings : mountReports)({ container, signal, source: createDemoReportSource({ scenario, delay: 500 }) });
+    document.querySelectorAll('.report-preview-nav a').forEach(link => {
+      const next = new URL(link.href);
+      next.searchParams.set('scenario', scenario);
+      link.href = next.href;
+      if (new URL(link.href).searchParams.get('view') === (view || 'reports')) link.setAttribute('aria-current', 'page');
+    });
+  </script>
+</body>
+</html>
