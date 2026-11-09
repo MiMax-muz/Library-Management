@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Xem trước thông báo TV4 | UniLib</title>
+  <link rel="stylesheet" href="../shared/styles.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="content notice-page">
+    <div class="notice-preview-top"><span class="notice-preview-brand">Uni<span>Lib.</span></span><span class="notice-preview-tag">TV4 · TUẦN 4 · GIAO DIỆN DEMO</span></div>
+    <div class="eyebrow">TRUNG TÂM THÔNG BÁO</div>
+    <h1 class="heading">Thông báo của bạn</h1>
+    <p class="sub">Xem thử giao diện thông báo bằng dữ liệu mẫu. Không cần đăng nhập hoặc cơ sở dữ liệu.</p>
+    <div class="notice-demo-controls" role="group" aria-label="Tùy chọn demo">
+      <label>Tài khoản xem thử
+        <select class="select" id="demo-account">
+          <option value="1">Nguyễn Minh Anh · SV001</option>
+          <option value="2">Trần Gia Bảo · SV002</option>
+        </select>
+      </label>
+      <label>Trạng thái dữ liệu
+        <select class="select" id="demo-scenario">
+          <option value="normal">Có thông báo</option>
+          <option value="empty">Chưa có thông báo</option>
+          <option value="error-once">Lỗi một lần, rồi thử lại</option>
+          <option value="error">Lỗi liên tục</option>
+        </select>
+      </label>
+      <span class="notice-demo-hint">Thao tác đánh dấu đã đọc chỉ lưu trong trang này; tải lại để đặt lại dữ liệu mẫu.</span>
+    </div>
+    <div id="app-content"></div>
+  </main>
+  <script type="module">
+    import { createDemoNotificationSource } from './data.js';
+    import { mountNotifications } from './notifications.js';
+    const params = new URLSearchParams(location.search);
+    const account = document.getElementById('demo-account');
+    const scenario = document.getElementById('demo-scenario');
+    account.value = params.get('account') === '2' ? '2' : '1';
+    scenario.value = ['normal', 'empty', 'error-once', 'error'].includes(params.get('scenario')) ? params.get('scenario') : 'normal';
+    const change = () => {
+      const next = new URL(location.href);
+      next.searchParams.set('account', account.value);
+      next.searchParams.set('scenario', scenario.value);
+      location.href = next.href;
+    };
+    account.addEventListener('change', change);
+    scenario.addEventListener('change', change);
+    const controller = new AbortController();
+    mountNotifications({
+      container: document.getElementById('app-content'),
+      signal: controller.signal,
+      source: createDemoNotificationSource({ recipientId: Number(account.value), scenario: scenario.value }),
+      recipientName: account.selectedOptions[0].textContent.split(' · ')[0],
+    });
+    window.addEventListener('pagehide', () => controller.abort(), { once: true });
+  </script>
+</body>
+</html>
