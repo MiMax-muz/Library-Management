@@ -1,0 +1,88 @@
+# Fine calc input:
+
+1. main fine calc:
+user_id
+borrow_id
+
+2. late fine calc:
+due_date
+return_date
+
+3. lost fine calc:
+lost_item_id
+
+
+# fine calc equations:
+
+states:
+BORROWED, RETURNED, LOST, DAMAGED
+
+main_fine_calc(borrow_id, calculation_date):
+    total_fine = 0
+    for item in borrow_id.borrow_items:
+
+        if item.status == "RETURNED":
+            fine = late_fine_calc(
+                item.due_date,
+                item.return_date
+            )
+
+        elif item.status == "LOST":
+            late_fine = late_fine_calc(
+                item.due_date,
+                item.confirmation_date
+            )
+
+            compensation = lost_fine_calc(item.id)
+
+            fine = late_fine + compensation
+
+        elif item.status == "DAMAGED":
+            late_fine = late_fine_calc(
+                item.due_date,
+                item.confirmation_date
+            )
+
+            compensation = damaged_fine_calc(
+                item.repair_cost,
+                item.price
+            )
+
+            fine = late_fine + compensation
+
+        elif item.status == "BORROWED":
+            fine = late_fine_calc(
+                item.due_date,
+                calculation_date
+            )
+
+        total_fine += fine
+
+    return total_fine
+
+# lost_fine_calc(id):
+    return id.price
+
+# damaged_fine_calc(repair_cost, item_price):
+    return min(repair_cost, item_price)
+
+# late_fine_calc(due_date, return_date):
+    time_pass = date(return_date) - date(due_date)
+    late_days = max(0, time_pass)
+    return late_days * 2000
+
+test cases:
+
+#|Trường hợp                                |Kết quả mong đợi
+1|Trả tất cả đúng hạn                       |0
+2|Trả tất cả trễ                            |Tổng tiền trễ từng cuốn
+3|Trả một phần, số còn lại chưa đến hạn     |0 nếu những cuốn đã trả đều đúng hạn
+4|Trả một phần, số còn lại quá hạn          |Chỉ tính tiền trễ của các cuốn quá hạn
+5|Xác nhận mất sách đúng hạn                |Tiền bồi thường
+6|Xác nhận mất sách sau hạn                 |Tiền trễ + bồi thường
+7|Xác nhận hư hỏng                          |Tiền sửa chữa
+8|Xác nhận hư hỏng sau hạn                  |Tiền trễ + tiền sửa chữa
+9|Vẫn đang mượn, chưa đến hạn               |0
+10|Vẫn đang mượn, đã quá hạn                |Tiền trễ tạm tính
+11|Phiếu mượn không tồn tại                 |Báo lỗi không tìm thấy phiếu
+12|Phiếu mượn tồn tại nhưng không có sách   |0
