@@ -1,11 +1,14 @@
-import { demoUser } from '../accounts/demo-store.js';
-export function mount({container,signal}) {
- if(signal.aborted)return;
- const content={
- user:['Không gian độc giả','Gửi yêu cầu mượn, theo dõi sách và khoản phạt của bạn.',[['/loans','Mượn sách của tôi'],['/fines','Khoản phạt của tôi'],['/accounts','Đổi mật khẩu']]],
- librarian:['Bàn làm việc nhân viên thư viện','Quản lý hồ sơ, thẻ độc giả; duyệt yêu cầu, bàn giao sách và xác nhận khoản phạt.',[['/readers','Quản lý độc giả / thẻ'],['/loans','Duyệt và bàn giao'],['/fines','Xử lý khoản phạt']]],
- admin:['Trung tâm quản trị','Quản lý tài khoản, vai trò và nhân viên; theo dõi các nghiệp vụ thư viện.',[['/accounts','Quản lý tài khoản / nhân viên'],['/readers','Quản lý độc giả'],['/loans','Theo dõi mượn / bàn giao'],['/fines','Quản lý khoản phạt']]],
- }[demoUser()?.role];
- if(!content)return;
- container.innerHTML=`<div class="hero"><div><div class="eyebrow">${content[0]}</div><h2>Chào mừng đến UniLib</h2><p>${content[1]}</p></div><div class="big" aria-hidden="true">📚</div></div><section class="panel"><div class="panel-head"><h3>Công việc của bạn</h3></div><nav>${content[2].map(([path,label])=>`<a class="btn outline" href="#${path}">${label}</a>`).join('')}</nav></section>`;
+import {currentUser} from './session.js';
+import {routesFor} from './app-routes.js';
+import {request} from './api.js';
+function node(tag,cls,text){const n=document.createElement(tag);n.className=cls;if(text)n.textContent=text;return n;}
+export async function mount({container,signal}){
+ container.replaceChildren();const u=currentUser();const hero=node('section','dashboard-welcome');hero.append(node('span','eyebrow','KHÔNG GIAN THƯ VIỆN'),node('h2','','Chào mừng bạn đến UniLib'),node('p','','Tra cứu, mượn sách và theo dõi hoạt động thư viện tại một nơi.'));container.append(hero);
+ const searchCard=node('form','dashboard-search-card');const label=node('label','','Tìm sách trong thư viện');label.htmlFor='dashboard-book-search';const row=node('div','dashboard-search-row'),input=node('input','input');input.id='dashboard-book-search';input.type='search';input.placeholder='Nhập tên sách, mã sách hoặc ISBN';const submit=node('button','btn','Tìm sách');submit.type='submit';row.append(input,submit);searchCard.append(label,row);const status=node('p','');status.setAttribute('role','status');const results=node('div','dashboard-search-results');searchCard.append(status,results);container.append(searchCard);
+ searchCard.onsubmit=async e=>{e.preventDefault();submit.disabled=true;results.replaceChildren();status.textContent='Đang tìm sách…';try{const r=await request('/books?q='+encodeURIComponent(input.value.trim()),{signal});if(signal.aborted)return;status.textContent=r.data.length?'Tìm thấy '+r.data.length+' đầu sách.':'Không tìm thấy sách phù hợp.';for(const b of r.data){const a=node('a','dashboard-news');a.href='#/books';a.append(node('strong','',b.ten_sach),node('p','muted',b.ma_sach+' · '+b.available+' bản khả dụng'));results.append(a);}}catch(err){if(!signal.aborted)status.textContent=err.message;}finally{submit.disabled=false;}};
+ const layout=node('div','dashboard-columns'),main=node('section','dashboard-main'),aside=node('aside','dashboard-aside');layout.append(main,aside);container.append(layout);const grid=node('div','dashboard-functions');main.append(grid);
+ const icons={'/favorites':'♡','/books':'▤','/profile':'◎','/loans':'⇄','/ebooks':'▣','/bookshelf':'▥','/notifications':'♧','/inventory':'✓','/reports':'▦','/readers':'♙','/fines':'₫','/accounts':'⚙'};
+ for(const r of routesFor(u.vai_tro).filter(r=>!r.hiddenNavigation&&(!r.roles||r.roles.includes(u.vai_tro)))){const a=node('a','dashboard-function');a.href='#'+r.path;a.append(node('span','dashboard-symbol',icons[r.path]||'◇'),node('strong','',r.title));grid.append(a);}
+ const updates=node('section','panel dashboard-feed');aside.append(updates);updates.append(node('h2','','Sách mới của thư viện'));
+ try{const r=await request('/books',{signal});if(signal.aborted)return;for(const b of r.data.slice(0,5)){const a=node('a','dashboard-news');a.href='#/books';a.append(node('strong','',b.ten_sach),node('p','muted',b.ten_the_loai+' · '+b.available+' bản khả dụng'));updates.append(a);}if(!r.data.length)updates.append(node('p','','Thư viện chưa có sách.'));}catch(e){if(!signal.aborted)updates.append(node('p','','Chưa tải được cập nhật sách.'));}
 }

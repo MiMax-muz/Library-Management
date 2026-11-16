@@ -15,13 +15,13 @@ final class Auth {
         if (!hash_equals(self::csrfToken(), $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) throw new ApiException(403, 'CSRF_INVALID', 'Phiên thao tác không hợp lệ. Hãy tải lại trang.');
     }
     // AccountService của TV4 chỉ gọi sau khi password_verify thành công.
-    public static function login(int $accountId): void { session_regenerate_id(true); $_SESSION = ['tai_khoan_id' => $accountId, 'csrf' => bin2hex(random_bytes(32))]; }
+    public static function login(int $accountId,int $version=0): void { session_regenerate_id(true); $_SESSION = ['tai_khoan_id' => $accountId, 'auth_version'=>$version, 'csrf' => bin2hex(random_bytes(32))]; }
     public static function logout(): void { $_SESSION = []; session_regenerate_id(true); }
     public static function user(PDO $pdo): ?array {
         if (!isset($_SESSION['tai_khoan_id'])) return null;
-        $q = $pdo->prepare('SELECT tai_khoan_id, email, mssv, vai_tro, trang_thai FROM tai_khoan WHERE tai_khoan_id = ?');
+        $q = $pdo->prepare('SELECT tai_khoan_id, email, ho_ten, mssv, vai_tro, trang_thai, auth_version, email_verification_required, email_verified_at FROM tai_khoan WHERE tai_khoan_id = ?');
         $q->execute([$_SESSION['tai_khoan_id']]); $user = $q->fetch();
-        if (!$user || $user['trang_thai'] !== 'active') { self::logout(); throw new ApiException(401, 'SESSION_EXPIRED', 'Tài khoản không còn hiệu lực.'); }
+        if (!$user || $user['trang_thai'] !== 'active' || (int)$user['auth_version']!==(int)($_SESSION['auth_version']??0) || ($user['email_verification_required']&&!$user['email_verified_at'])) { self::logout(); throw new ApiException(401, 'SESSION_EXPIRED', 'Phiên không còn hiệu lực. Hãy đăng nhập lại.'); }
         return $user;
     }
     public static function requireRoles(PDO $pdo, array $roles = []): array {

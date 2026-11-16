@@ -13,7 +13,7 @@ final class NotificationRepository {
         $types = match ($filters['type'] ?? 'all') {
             'borrow' => ['borrow-approved', 'borrow-rejected'],
             'renewal' => ['renewal-approved', 'renewal-rejected'],
-            'due' => ['due-reminder'],
+            'due' => ['due-reminder', 'loan-overdue', 'access-expired'],
             default => [],
         };
         if ($types) {

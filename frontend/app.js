@@ -1,18 +1,25 @@
 // TV1: router hash; mount nhận signal và có thể trả cleanup đồng bộ/bất đồng bộ.
 import { mountLayout, updateMenu, setPageTitle } from './shared/layout.js';
-import { refreshSession } from './shared/session.js';
+import { refreshSession, currentUser } from './shared/session.js';
 import { showState, toast } from './shared/ui.js';
 import { mount as mountHome } from './shared/home.js';
 import { routesFor } from './shared/app-routes.js';
-import { mountLogin } from './accounts/login.js?v=registration-2';
-import { demoUser, clearDemoUser } from './accounts/demo-store.js';
-const canAccess = (roles = []) => Boolean(demoUser() && (!roles.length || roles.includes(demoUser().role)));
+import { mountLogin, mountEmailAction } from './accounts/live.js';
+import { request, setCsrfToken } from './shared/api.js';
+import {mount as publicEbooks} from './ebooks/public.js';
+const sessionUser = () => { const u=currentUser(); return u ? {role:u.vai_tro,name:u.ho_ten?.trim()||u.email} : null; };
+const canAccess = (roles = []) => Boolean(sessionUser() && (!roles.length || roles.includes(sessionUser().role)));
 const root = document.getElementById('app');
+const authQuery=new URLSearchParams(location.search);
+const emailAction=['verify','reset'].includes(authQuery.get('auth'))?{action:authQuery.get('auth'),token:authQuery.get('token')||''}:null;
+if(emailAction)history.replaceState(null,'',location.pathname+'#/email-action');
 let activeController, cleanup, shellMounted = false;
 async function navigate() {
   activeController?.abort(); cleanup?.(); cleanup = null;
   const controller = new AbortController(); activeController = controller;
-  if (!demoUser()) {
+  if(emailAction){shellMounted=false;root.className='login-page';mountEmailAction({container:root,signal:controller.signal,...emailAction});return;}
+  if (!sessionUser()) {
+    if(location.hash==='#/public-ebooks'){shellMounted=false;root.className='login-page';try{await publicEbooks({container:root,signal:controller.signal});}catch(e){if(!controller.signal.aborted)showState(root,e.message);}return;}
     shellMounted = false;
     root.className = 'login-page';
     document.title = 'Đăng nhập | UniLib';
@@ -22,16 +29,15 @@ async function navigate() {
     } });
     return;
   }
-  const routes = [{ path: '/', title: 'Tổng quan', icon: '◫', mount: mountHome }, ...routesFor(demoUser().role)];
+  const routes = [{ path: '/', title: 'Trang chủ', icon: '◫', mount: mountHome }, ...routesFor(sessionUser().role)];
   if (!shellMounted) {
     root.className = '';
     mountLayout(root); shellMounted = true;
-    const logout = document.createElement('button');
-    logout.className = 'btn outline'; logout.textContent = 'Đăng xuất';
-    logout.addEventListener('click', () => { clearDemoUser(); navigate(); });
-    root.querySelector('.top-actions').prepend(logout);
   }
-  document.getElementById('session-label').textContent = demoUser().name + ' · ' + ({user:'User',librarian:'Nhân viên thư viện',admin:'Admin'})[demoUser().role];
+  document.getElementById('session-label').textContent = sessionUser().name;
+  document.getElementById('avatar-initial').textContent=sessionUser().name.slice(0,1).toLocaleUpperCase('vi');
+  document.getElementById('profile-avatar').title='Hồ sơ của '+sessionUser().name;
+  refreshNotificationCount(controller.signal);
   const container = document.getElementById('app-content');
   let path = location.hash.slice(1) || '/';
   if (path.startsWith('/week1/')) { path = path.replace('/week1/', '/'); history.replaceState(null, '', '#' + path); }
@@ -45,7 +51,7 @@ async function navigate() {
   }
   updateMenu(routes, canAccess, path);
   setPageTitle(selected?.title || 'Không tìm thấy trang');
-  if (!selected) return showState(container, 'Trang không tồn tại. Chọn Tổng quan để quay lại.');
+  if (!selected) return showState(container, 'Trang không tồn tại. Chọn Trang chủ để quay lại.');
   if (!canAccess(selected.roles)) return showState(container, 'Vui lòng đăng nhập bằng tài khoản có quyền truy cập.', 'status-error');
   showState(container, 'Đang tải…');
   try {
@@ -55,8 +61,10 @@ async function navigate() {
   } catch (error) { if (!controller.signal.aborted) showState(container, error.message, 'status-error'); }
 }
 window.addEventListener('hashchange', navigate);
-window.addEventListener('demo-logout', navigate);
-window.addEventListener('session-expired', () => { clearDemoUser(); toast('Phiên đã hết hạn. Vui lòng đăng nhập lại.'); navigate(); });
-// Hiển thị đăng nhập ngay; lấy phiên nền không được chặn màn hình khi API chưa sẵn sàng.
-navigate();
-refreshSession().catch(() => {});
+
+window.addEventListener('session-expired', () => { toast('Phiên đã hết hạn. Vui lòng đăng nhập lại.'); navigate(); });
+// Khôi phục phiên thật trước khi chọn màn hình.
+refreshSession().then(navigate).catch(error => { if(error.status===401){navigate();return;} showState(root,error.message,'status-error'); const retry=document.createElement('button'); retry.textContent='Thử lại'; retry.onclick=()=>location.reload(); root.append(retry); });
+
+async function refreshNotificationCount(signal){try{const r=await request('/notifications/unread-count',{signal});if(signal?.aborted)return;const badge=document.getElementById('notification-count'),bell=document.getElementById('notification-bell');if(!badge||!bell)return;const count=Number(r.data.unread)||0;badge.hidden=count===0;badge.textContent=count>99?'99+':String(count);bell.setAttribute('aria-label',count?'Thông báo: '+count+' chưa đọc':'Thông báo: không có thông báo chưa đọc');}catch(e){if(signal?.aborted)return;const badge=document.getElementById('notification-count');if(badge)badge.hidden=true;}}
+window.addEventListener('notifications-updated',()=>{if(sessionUser())refreshNotificationCount(activeController?.signal);});

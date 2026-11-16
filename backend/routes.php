@@ -2,7 +2,7 @@
 declare(strict_types=1);
 // TV1: nền dùng chung tuần 1.
 return static function (Router $router, array $config): void {
-    $router->add('GET', '/api/health', static function () { Response::json(['status' => 'ok', 'baseline' => 'week1-foundation']); });
+    $router->add('GET', '/api/health', static function () { Response::json(['status' => 'ok', 'baseline' => 'week3-4-runtime']); });
     $router->add('GET', '/api/health/db', static function () use ($config) {
         try {
             $pdo = Database::connection($config['db']);
@@ -15,7 +15,7 @@ return static function (Router $router, array $config): void {
         $user = isset($_SESSION['tai_khoan_id']) ? Auth::user(Database::connection($config['db'])) : null;
         Response::json(['user' => $user, 'csrf_token' => Auth::csrfToken()]);
     });
-    foreach (['books', 'ebooks', 'readers', 'bookshelf', 'loans', 'fines', 'accounts', 'notifications', 'reports'] as $module) {
+    foreach (['books', 'readers', 'fines', 'accounts', 'profile', 'loans', 'ebooks', 'bookshelf', 'inventory', 'settings', 'reports', 'notifications'] as $module) {
         $file = __DIR__ . '/' . $module . '/routes.php';
         if (!is_file($file)) continue;
         $register = require $file;

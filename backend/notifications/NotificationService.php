@@ -7,7 +7,7 @@ require_once __DIR__ . '/NotificationRepository.php';
 final class NotificationService {
     private const TYPES = [
         'borrow-approved', 'borrow-rejected', 'renewal-approved',
-        'renewal-rejected', 'due-reminder',
+        'renewal-rejected', 'due-reminder', 'loan-overdue', 'access-expired',
     ];
     private NotificationRepository $repository;
 
@@ -115,7 +115,7 @@ final class NotificationService {
         $sourceId = self::textField($event, 'source_id', 1, 80);
         if (!preg_match('/^[A-Za-z0-9:_-]+$/D', $sourceId))
             throw new ApiException(422, 'INVALID_EVENT', 'Mã giao dịch nguồn không hợp lệ.');
-        $dueDate = self::dueDate($event['due_date'] ?? null, $type === 'due-reminder');
+        $dueDate = self::dueDate($event['due_date'] ?? null, in_array($type, ['due-reminder', 'loan-overdue', 'access-expired'], true));
         $title = self::textField($event, 'title', 2, 180);
         $message = self::textField($event, 'message', 2, 2000);
         $reference = isset($event['reference']) ? self::textField($event, 'reference', 1, 120) : null;

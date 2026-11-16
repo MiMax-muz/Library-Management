@@ -8,6 +8,8 @@ const categories = {
   'renewal-approved': { icon: '↗', label: 'Gia hạn', tone: 'success' },
   'renewal-rejected': { icon: '×', label: 'Gia hạn', tone: 'warn' },
   'due-reminder': { icon: '◷', label: 'Nhắc hạn', tone: 'reminder' },
+  'loan-overdue': { icon: '!', label: 'Sách quá hạn', tone: 'warn' },
+  'access-expired': { icon: '⌛', label: 'Quyền đọc hết hạn', tone: 'warn' },
 };
 
 function element(tag, className, value) {
@@ -116,7 +118,7 @@ export function mountNotifications({ container, signal, source, recipientName = 
     const kind = query('[data-notice-kind]').value;
     const visible = items.filter(item => {
       const statusMatch = filter === 'all' || (filter === 'unread' ? !item.readAt : !!item.readAt);
-      const kindMatch = kind === 'all' || item.type.startsWith(kind === 'due' ? 'due-' : `${kind}-`);
+      const kindMatch = kind === 'all' || (kind === 'due' ? ['due-reminder','loan-overdue','access-expired'].includes(item.type) : item.type.startsWith(`${kind}-`));
       return statusMatch && kindMatch && normalize(`${item.title} ${item.message} ${item.reference}`).includes(term);
     }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     query('[data-notice-result]').textContent = `${visible.length} trong ${items.length} thông báo`;

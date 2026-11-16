@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+/backend/mail.local.php
 /backend/storage/*
 !/backend/storage/ebooks/
 /backend/storage/ebooks/*
