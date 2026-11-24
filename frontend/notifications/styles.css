@@ -19,7 +19,7 @@
 .notice-hero-count span { color: #d8f0e2; font-size: 11px; }
 .notice-demo-note { display: flex; flex-wrap: wrap; gap: 6px 15px; align-items: baseline; border: 1px solid #cce7d8; border-left: 4px solid #20835e; border-radius: 11px; padding: 12px 15px; margin: 16px 0; color: #2a634d; background: #eaf6ee; font-size: 12px; line-height: 1.5; }
 .notice-demo-note span { color: #4c7561; }
-.notice-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin-bottom: 20px; }
+.notice-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 24px); margin-block: clamp(16px, 2vw, 24px); }
 .notice-stat { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; background: #fff; border: 1px solid #e2ece6; border-radius: 14px; box-shadow: 0 5px 20px #164c3908; }
 .notice-stat span { color: #698276; font-size: 12px; font-weight: 700; }
 .notice-stat strong { color: #194c39; font: 800 24px Manrope, sans-serif; }
@@ -56,7 +56,8 @@
 .notice-time { color: #899b90; font-size: 11px; }
 .notice-new { color: #0f8055; background: #dff4e7; border-radius: 99px; padding: 2px 7px; font-size: 10px; font-weight: 800; }
 .notice-item h3 { color: #1b3f31; font: 800 14px Manrope, sans-serif; margin: 0 0 5px; }
-.notice-item.is-read h3 { color: #526c5e; }
+.notice-item.is-read h3, .notice-item.is-read .notice-item-message { color: #526c5e; font-weight: 400; }
+.notice-item.is-unread h3, .notice-item.is-unread .notice-item-message { font-weight: 700; }
 .notice-item-message { color: #61796b; font-size: 13px; line-height: 1.55; margin: 0 0 12px; }
 .notice-item-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
 .notice-reference { color: #81968a; font-size: 11px; }
@@ -83,7 +84,7 @@
   .notice-hero-count { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 13px; }
   .notice-hero-count strong { font-size: 28px; }
   .notice-hero-count span { font-size: 10px; }
-  .notice-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .notice-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
   .notice-stat:last-child { grid-column: span 2; }
   .notice-stat { flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px; }
   .notice-stat strong { font-size: 20px; }

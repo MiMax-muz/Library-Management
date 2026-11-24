@@ -30,6 +30,6 @@ INSERT INTO tac_gia (tac_gia_id,ho_ten) VALUES (1,'Nhóm tác giả mẫu'),(2,'
 INSERT INTO nha_xuat_ban (nha_xuat_ban_id,ten_nha_xuat_ban) VALUES (1,'Nhà xuất bản mẫu');
 INSERT INTO vi_tri_luu_tru (vi_tri_id,the_loai_id,ma_vi_tri,mo_ta) VALUES (1,1,'CNTT-A01','Kệ A01'),(2,2,'VH-B01','Kệ B01');
 INSERT INTO sach (sach_id,ma_sach,ten_sach,the_loai_id,nha_xuat_ban_id,gia_bia) VALUES (1,'S001','Nhập môn lập trình',1,1,100000),(2,'S002','Tuyển tập văn học',2,1,80000);
-INSERT INTO sach_tac_gia VALUES (1,1),(2,2);
+INSERT INTO sach_tac_gia(sach_id,tac_gia_id) VALUES (1,1),(2,2);
 INSERT INTO ban_sach (ma_ban_sach,sach_id,the_loai_id,vi_tri_id,tinh_trang) VALUES ('S001-01',1,1,1,'available'),('S001-02',1,1,1,'damaged'),('S002-01',2,2,2,'available'),('S002-02',2,2,2,'lost');
 COMMIT;

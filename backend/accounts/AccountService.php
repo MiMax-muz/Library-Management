@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/../readers/ReaderService.php';
 final class AccountService {
     public function __construct(private PDO $db) {}
     public function login(array $data): array {
@@ -7,6 +8,7 @@ final class AccountService {
         $row=Input::query($this->db,'SELECT * FROM tai_khoan WHERE email=? OR mssv=?',[strtolower($identifier),strtoupper($identifier)])->fetch();
         if (!$row || !password_verify((string)($data['password'] ?? ''), $row['mat_khau_hash']) || $row['trang_thai']!=='active') throw new ApiException(401,'LOGIN_FAILED','Thông tin đăng nhập không hợp lệ.');
         if($row['email_verification_required'] && !$row['email_verified_at'])throw new ApiException(403,'EMAIL_NOT_VERIFIED','Hãy xác thực email trước khi đăng nhập. Có thể chọn gửi lại liên kết tại màn hình đăng nhập.');
+        if ($row['vai_tro']==='user') Input::transaction($this->db,fn()=>(new ReaderService($this->db))->ensureCard((int)$row['tai_khoan_id']));
         Auth::login((int)$row['tai_khoan_id'],(int)$row['auth_version']); return ['user'=>Auth::user($this->db),'csrf_token'=>Auth::csrfToken()];
     }
     public function create(array $data, bool $admin=false): array {

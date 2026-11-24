@@ -19,7 +19,7 @@ $result=Input::transaction($db,function()use($db,$groups){
  foreach($groups as [$code,$category,$titles]){
   Input::query($db,'INSERT IGNORE INTO the_loai(ma_the_loai,ten_the_loai) VALUES (?,?)',[$code,$category]);$cat=Input::query($db,'SELECT the_loai_id FROM the_loai WHERE ma_the_loai=?',[$code])->fetchColumn();
   Input::query($db,'INSERT IGNORE INTO vi_tri_luu_tru(the_loai_id,ma_vi_tri,mo_ta) VALUES (?,?,?)',[$cat,$code.'-A01','Kệ sách mẫu phục vụ kiểm thử']);$location=Input::query($db,'SELECT vi_tri_id FROM vi_tri_luu_tru WHERE ma_vi_tri=?',[$code.'-A01'])->fetchColumn();
-  foreach($titles as $title){$n++;$bookCode='DEMO-'.str_pad((string)$n,3,'0',STR_PAD_LEFT);$cover='/assets/covers/'.strtolower($bookCode).'.svg';
+  foreach($titles as $title){$n++;if(!in_array($n,[1,5,9,13,19],true))continue;$bookCode='DEMO-'.str_pad((string)$n,3,'0',STR_PAD_LEFT);$cover='/assets/covers/'.strtolower($bookCode).'.svg';
    if(!is_file(__DIR__.'/../frontend'.$cover))throw new RuntimeException('Missing cover: '.$bookCode);
    $id=Input::query($db,'SELECT sach_id FROM sach WHERE ma_sach=?',[$bookCode])->fetchColumn();
    if($id)continue;

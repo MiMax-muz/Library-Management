@@ -3,8 +3,15 @@ declare(strict_types=1);
 final class BookService {
  public function __construct(private PDO $db) {}
  public function listing(array $filter): array {
-  $sql="SELECT s.*,t.ten_the_loai,(SELECT COUNT(*) FROM ban_sach b WHERE b.sach_id=s.sach_id AND b.tinh_trang='available' AND b.dang_luu_hanh=1 AND s.dang_luu_hanh=1) available FROM sach s JOIN the_loai t USING(the_loai_id) WHERE (s.ten_sach LIKE ? OR s.ma_sach LIKE ? OR s.isbn LIKE ?)";
-  $q='%'.($filter['q']??'').'%';$args=[$q,$q,$q];
+  $sql="SELECT s.*,t.ten_the_loai,(SELECT COUNT(*) FROM ban_sach b WHERE b.sach_id=s.sach_id AND b.tinh_trang='available' AND b.dang_luu_hanh=1 AND s.dang_luu_hanh=1) available FROM sach s JOIN the_loai t USING(the_loai_id) WHERE (s.ten_sach LIKE ? OR s.ma_sach LIKE ? OR s.isbn LIKE ? OR s.subtitle LIKE ? OR s.subjects LIKE ? OR s.tags LIKE ? OR s.issn LIKE ? OR REPLACE(s.isbn,'-','') LIKE ?)";
+  $q='%'.($filter['q']??'').'%';$normalized=preg_replace('/[\s-]+/','',$q);$args=[$q,$q,$q,$q,$q,$q,$normalized,$normalized];
+  $resource=$filter['resource']??'all';
+  if ($resource==='print') {
+   $sql.=' AND EXISTS (SELECT 1 FROM ban_sach b WHERE b.sach_id=s.sach_id)';
+  } elseif (in_array($resource,['digital','online'],true)) {
+   $access=$resource==='online'?" AND e.access_mode='public'":'';
+   $sql.=" AND s.dang_luu_hanh=1 AND EXISTS (SELECT 1 FROM ebook e JOIN ebook_file f USING(ebook_id) WHERE e.sach_id=s.sach_id AND e.active=1 $access)";
+  }
   if(!empty($filter['category'])){$sql.=' AND s.the_loai_id=?';$args[]=Input::id($filter['category']);}
   return Input::query($this->db,$sql.' ORDER BY s.sach_id DESC LIMIT 500',$args)->fetchAll();
  }
@@ -12,8 +19,8 @@ final class BookService {
   $book=Input::query($this->db,'SELECT * FROM sach WHERE sach_id=?',[$id])->fetch();
   if(!$book)throw new ApiException(404,'NOT_FOUND','Không có sách.');
   $book['copies']=Input::query($this->db,'SELECT b.*,v.ma_vi_tri FROM ban_sach b JOIN vi_tri_luu_tru v USING(vi_tri_id) WHERE b.sach_id=?',[$id])->fetchAll();
-  $book['authors']=Input::query($this->db,'SELECT t.* FROM tac_gia t JOIN sach_tac_gia s USING(tac_gia_id) WHERE s.sach_id=?',[$id])->fetchAll();
-  return $book;
+  $book['authors']=Input::query($this->db,'SELECT t.*,s.author_role FROM tac_gia t JOIN sach_tac_gia s USING(tac_gia_id) WHERE s.sach_id=?',[$id])->fetchAll();
+  $book['ebook_ids']=Input::query($this->db,'SELECT ebook_id FROM ebook WHERE sach_id=? AND active=1 AND ?=1 ORDER BY ebook_id',[$id,$book['dang_luu_hanh']])->fetchAll(PDO::FETCH_COLUMN);  return $book;
  }
  public function save(array $d,?int $id=null): array {
   return Input::transaction($this->db,function()use($d,$id){
@@ -28,13 +35,22 @@ final class BookService {
     if($copies && (int)$old['the_loai_id']!==$category)throw new ApiException(409,'CATEGORY_IN_USE','Không đổi thể loại sách đã có bản.');
     foreach($copies as $copy)if(!$active && $copy['tinh_trang']==='borrowed')throw new ApiException(409,'COPY_BORROWED','Sách đang mượn không thể ngừng lưu hành.');
    }
+   foreach (['isbn','issn'] as $key) {
+    if (empty($d[$key]) || $d[$key]===($old[$key]??null)) continue;
+    $d[$key]=strtoupper(preg_replace('/[\s-]+/','',$d[$key]));
+    $pattern=$key==='isbn'?'/^(?:[0-9]{9}[0-9X]|[0-9]{13})$/D':'/^[0-9]{7}[0-9X]$/D';
+    if (!preg_match($pattern,$d[$key])) throw new ApiException(422,'INVALID_IDENTIFIER','Định dạng '.strtoupper($key).' không hợp lệ.');
+   }
    $values=[Input::text($d,'ma_sach',32),Input::text($d,'ten_sach',255),$category,($d['isbn']??'')?:null,$d['nha_xuat_ban_id']??null,$year,$price,$d['mo_ta']??null,$active];
    if($id){$values[]=$id;Input::query($this->db,'UPDATE sach SET ma_sach=?,ten_sach=?,the_loai_id=?,isbn=?,nha_xuat_ban_id=?,nam_xuat_ban=?,gia_bia=?,mo_ta=?,dang_luu_hanh=? WHERE sach_id=?',$values);}
    else{Input::query($this->db,'INSERT INTO sach(ma_sach,ten_sach,the_loai_id,isbn,nha_xuat_ban_id,nam_xuat_ban,gia_bia,mo_ta,dang_luu_hanh) VALUES (?,?,?,?,?,?,?,?,?)',$values);$id=(int)$this->db->lastInsertId();}
+   foreach (['cover_image_url','subtitle','publish_place','edition','issn','languages','subjects','tags','table_of_contents'] as $column) {
+    if (array_key_exists($column,$d)) Input::query($this->db,"UPDATE sach SET $column=? WHERE sach_id=?",[$d[$column]?:null,$id]);
+   }
    if(isset($d['author_ids'])){
     if(!is_array($d['author_ids']))throw new ApiException(422,'INVALID_AUTHORS','Danh sách tác giả không hợp lệ.');
     Input::query($this->db,'DELETE FROM sach_tac_gia WHERE sach_id=?',[$id]);
-    foreach(array_unique($d['author_ids']) as $author)Input::query($this->db,'INSERT INTO sach_tac_gia VALUES (?,?)',[$id,Input::id($author)]);
+    foreach(array_unique($d['author_ids']) as $author)Input::query($this->db,'INSERT INTO sach_tac_gia(sach_id,tac_gia_id,author_role) VALUES (?,?,?)',[$id,Input::id($author),$d['author_roles'][$author]??'Tác giả']);
    }
    Input::audit($this->db,'book.save',(string)$id);return ['sach_id'=>$id];
   });

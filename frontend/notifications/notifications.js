@@ -67,7 +67,7 @@ function loadingState() {
   return wrap;
 }
 
-export function mountNotifications({ container, signal, source, recipientName = 'bạn' }) {
+export function mountNotifications({ container, signal, source }) {
   let items = [];
   let filter = 'all';
   let loaded = false;
@@ -83,15 +83,13 @@ export function mountNotifications({ container, signal, source, recipientName = 
     <div class="notice-stats" aria-label="Số lượng thông báo">
       <div class="notice-stat"><span>Tất cả</span><strong data-notice-total>—</strong></div>
       <div class="notice-stat"><span>Chưa đọc</span><strong data-notice-unread-stat>—</strong></div>
-      <div class="notice-stat"><span>Đã đọc</span><strong data-notice-read>—</strong></div>
     </div>
     <section class="panel notice-panel" aria-labelledby="notice-heading">
-      <div class="notice-panel-head"><div><div class="eyebrow">DÒNG HOẠT ĐỘNG</div><h2 id="notice-heading">Hộp thông báo</h2><p data-notice-recipient></p></div><button class="btn outline" type="button" data-notice-all disabled>Đánh dấu tất cả đã đọc</button></div>
+      <div class="notice-panel-head"><div><div class="eyebrow">DÒNG HOẠT ĐỘNG</div><h2 id="notice-heading">Hộp thông báo</h2></div><button class="btn outline" type="button" data-notice-all disabled>Đánh dấu tất cả đã đọc</button></div>
       <div class="notice-toolbar">
         <div class="notice-filters" role="group" aria-label="Lọc theo trạng thái">
           <button type="button" data-notice-filter="all" aria-pressed="true">Tất cả <span data-notice-filter-count="all">0</span></button>
           <button type="button" data-notice-filter="unread" aria-pressed="false">Chưa đọc <span data-notice-filter-count="unread">0</span></button>
-          <button type="button" data-notice-filter="read" aria-pressed="false">Đã đọc <span data-notice-filter-count="read">0</span></button>
         </div>
         <div class="notice-search-row"><label class="notice-search-label">Tìm thông báo<input class="input" type="search" data-notice-search placeholder="Tìm theo nội dung hoặc mã phiếu"></label><label class="notice-kind-label">Loại thông báo<select class="select" data-notice-kind><option value="all">Tất cả loại</option><option value="borrow">Mượn sách</option><option value="renewal">Gia hạn</option><option value="due">Nhắc hạn</option></select></label></div>
       </div>
@@ -102,15 +100,13 @@ export function mountNotifications({ container, signal, source, recipientName = 
 
   const query = selector => container.querySelector(selector);
   const body = query('[data-notice-body]');
-  query('[data-notice-recipient]').textContent = `Đang xem thông báo của ${recipientName}.`;
 
   function render() {
     const unread = items.filter(item => !item.readAt).length;
     query('[data-notice-total]').textContent = String(items.length);
     query('[data-notice-unread]').textContent = String(unread);
     query('[data-notice-unread-stat]').textContent = String(unread);
-    query('[data-notice-read]').textContent = String(items.length - unread);
-    for (const [key, count] of Object.entries({ all: items.length, unread, read: items.length - unread })) {
+    for (const [key, count] of Object.entries({ all: items.length, unread })) {
       query(`[data-notice-filter-count="${key}"]`).textContent = String(count);
     }
     query('[data-notice-all]').disabled = busy || !loaded || unread === 0;

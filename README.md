@@ -105,6 +105,7 @@ $env:SESSION_SECURE='0'
 & C:/xampp/php/php.exe database/migrations/005_b34.php
 & C:/xampp/php/php.exe database/migrations/006_book_covers.php
 & C:/xampp/php/php.exe database/migrations/007_week5_payments.php
+& C:/xampp/php/php.exe database/migrations/008_book_details.php
 ```
 
 PHP không tự đọc `.env`; `.env.example` chỉ là danh sách biến cần đặt. Kiểm tra từng migration thành công trước khi tiếp tục. Với database cũ, chỉ chạy migration, không nhập lại schema/seed. Nếu dùng database/cổng cũ từ bản chạy trước, đặt đúng DB_NAME/DB_PORT, không đổi tên hay xóa database để cài lại.
@@ -207,9 +208,9 @@ Giới hạn quyền: User không được mở trang quản lý, duyệt/giao/t
 
 Kiểm thử đợt tuần 3–4 thực hiện trên database riêng: nghiệp vụ chống bàn giao/ghi phạt trùng, hoàn tác khi bản cuối không còn, gia hạn và biên quá hạn; HTTP kiểm tra quyền PDF/phiên bản/thu hồi, quyền hồ sơ/thông báo và đầu vào; trình duyệt chạy luồng yêu cầu → duyệt → bàn giao → gia hạn → trả, lưu hồ sơ/tiến độ và mở menu User/Admin. Bằng chứng nằm trong nhật ký ngoài dự án, không phải màn hình thử tách khỏi hệ thống.
 
-## 12. Bộ 20 đầu sách mẫu có bìa
+## 12. Bộ 5 đầu sách mẫu có bìa
 
-Đã có bộ `DEMO-001` đến `DEMO-020`, thuộc 5 nhóm thể loại mẫu, mỗi đầu sách có 3 bản giấy (60 bản). Tên, tác giả, nhà xuất bản và bìa minh họa là dữ liệu giả lập phục vụ kiểm thử, không phải dữ liệu ấn bản thương mại. Giá bìa từ 70.000đ đến 165.000đ để thử tính phạt/bồi thường. ISBN để trống.
+Bộ demo gồm DEMO-001, DEMO-005, DEMO-009, DEMO-013 và DEMO-019. Mỗi đầu sách có 3 bản giấy. Sau khi tạo sách mẫu, chạy `php database/seed-book-details.php` để điền thông tin thư mục minh họa.
 
 Tìm `DEMO-` trong Sách/kho hoặc Tra cứu sách để xem bộ mẫu. Bìa lưu cục bộ trong `frontend/assets/covers/`; cột `sach.cover_path` do migration 006 bổ sung. Sách cũ không có bìa vẫn hiển thị bình thường. Không có PDF toàn văn đi kèm; thử eBook bằng cách chọn một đầu sách mẫu và tải PDF của bạn qua Sách điện tử.
 

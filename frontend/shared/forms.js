@@ -4,7 +4,7 @@ export const field=(key,label,type='text',required=true)=>({key,label,type,requi
 export const select=(key,label,options)=>({key,label,options,required:true});
 export function form(host,fields,values,onSave,label='Lưu'){
  const f=document.createElement('form');f.className='panel';
- f.innerHTML=fields.map(x=>'<label class="field">'+esc(x.label)+(x.options?'<select class="select" name="'+x.key+'">'+x.options.map(([v,t])=>'<option value="'+esc(v)+'" '+(String(values[x.key]??'')===String(v)?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select>':'<input class="input" name="'+x.key+'" type="'+(x.type||'text')+'" value="'+esc(values[x.key])+'" '+(x.required?'required':'')+'>')+'</label>').join('')+'<p role="alert"></p><button class="btn">'+label+'</button>';
+ f.innerHTML=fields.map(x=>'<label class="field">'+esc(x.label)+(x.options?'<select class="select" name="'+x.key+'">'+x.options.map(([v,t])=>'<option value="'+esc(v)+'" '+(String(values[x.key]??'')===String(v)?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select>':x.type==='textarea'?'<textarea class="input" rows="4" name="'+x.key+'">'+esc(values[x.key])+'</textarea>':'<input class="input" name="'+x.key+'" type="'+(x.type||'text')+'" value="'+esc(values[x.key])+'" '+(x.required?'required':'')+'>')+'</label>').join('')+'<p role="alert"></p><button class="btn">'+label+'</button>';
  f.onsubmit=async e=>{e.preventDefault();const button=f.querySelector('button');button.disabled=true;const d=Object.fromEntries(new FormData(f));for(const x of fields)if(x.type==='number')d[x.key]=d[x.key]===''?null:Number(d[x.key]);try{await onSave(d);}catch(err){f.querySelector('[role=alert]').textContent=err.message;}finally{button.disabled=false;}};
  host.append(f);return f;
 }

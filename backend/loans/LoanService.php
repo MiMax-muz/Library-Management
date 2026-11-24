@@ -37,19 +37,19 @@ final class LoanService {
  public function request(array $d,array $actor):array{
   $ids=$d['copy_ids']??null;if(!is_array($ids)||!$ids||count($ids)>50)throw new ApiException(422,'INVALID_COPIES','Chọn ít nhất một bản sách.');$ids=array_map([Input::class,'id'],$ids);if(count(array_unique($ids))!==count($ids))throw new ApiException(422,'DUPLICATE_COPY','Không chọn trùng bản sách.');sort($ids);
   return Input::transaction($this->db,function()use($ids,$actor){
-   $reader=$this->lockReader((int)$actor['tai_khoan_id']);$this->eligible((int)$reader['doc_gia_id']);$p=(new SettingsService($this->db))->values();
+   (new ReaderService($this->db))->ensureCard((int)$actor['tai_khoan_id']);$reader=$this->lockReader((int)$actor['tai_khoan_id']);$this->eligible((int)$reader['doc_gia_id']);$p=(new SettingsService($this->db))->values();
    if(count($ids)>(int)$p['borrow_per_request'])throw new ApiException(422,'BORROW_LIMIT','Vượt số cuốn mỗi yêu cầu.');
    $active=(int)Input::query($this->db,"SELECT COUNT(*) FROM loan_item i JOIN loan l USING(loan_id) JOIN borrow_request r USING(request_id) WHERE doc_gia_id=? AND i.status='borrowed'",[$reader['doc_gia_id']])->fetchColumn();
    if($active+count($ids)>(int)$p['borrow_total'])throw new ApiException(422,'BORROW_LIMIT','Vượt tổng hạn mức đang mượn.');
    foreach($ids as $id){$b=Input::query($this->db,'SELECT b.*,s.dang_luu_hanh book_active FROM ban_sach b JOIN sach s USING(sach_id) WHERE ban_sach_id=? FOR UPDATE',[$id])->fetch();if(!$b||!$b['book_active']||!$b['dang_luu_hanh']||$b['tinh_trang']!=='available')throw new ApiException(409,'COPY_UNAVAILABLE','Có bản sách không khả dụng.');
     if(Input::query($this->db,"SELECT 1 FROM borrow_request_item x JOIN borrow_request r USING(request_id) WHERE r.doc_gia_id=? AND x.ban_sach_id=? AND r.status IN ('pending','approved')",[$reader['doc_gia_id'],$id])->fetch())throw new ApiException(409,'DUPLICATE_REQUEST','Bạn đã có yêu cầu cho bản sách này.');}
-   Input::query($this->db,'INSERT INTO borrow_request(doc_gia_id) VALUES (?)',[$reader['doc_gia_id']]);$id=(int)$this->db->lastInsertId();foreach($ids as $copy)Input::query($this->db,'INSERT INTO borrow_request_item VALUES (?,?)',[$id,$copy]);Input::audit($this->db,'loan.request',(string)$id);return ['request_id'=>$id];
+   Input::query($this->db,'INSERT INTO borrow_request(doc_gia_id,status) VALUES (?,\'approved\')',[$reader['doc_gia_id']]);$id=(int)$this->db->lastInsertId();foreach($ids as $copy)Input::query($this->db,'INSERT INTO borrow_request_item VALUES (?,?)',[$id,$copy]);Input::audit($this->db,'loan.request',(string)$id);return ['request_id'=>$id];
   });
  }
- public function decide(int $id,string $action,array $actor):array{
+ public function decide(int $id,string $action,array $actor,array $dates=[]):array{
   if(!in_array($action,['approve','reject','cancel','handover'],true))throw new ApiException(422,'INVALID_ACTION','Thao tác không hợp lệ.');
   if($action!=='cancel'&&$actor['vai_tro']==='user')throw new ApiException(403,'FORBIDDEN','Cần quyền nhân viên.');
-  return Input::transaction($this->db,function()use($id,$action,$actor){
+  return Input::transaction($this->db,function()use($id,$action,$actor,$dates){
    $owner=$this->owner($id);$this->access($owner,$actor);$reader=$this->lockReader((int)$owner['tai_khoan_id']);
    $r=Input::query($this->db,'SELECT * FROM borrow_request WHERE request_id=? FOR UPDATE',[$id])->fetch();
    if($action==='handover'){
@@ -58,12 +58,23 @@ final class LoanService {
     $this->eligible((int)$reader['doc_gia_id']);$p=(new SettingsService($this->db))->values();$copies=Input::query($this->db,'SELECT ban_sach_id FROM borrow_request_item WHERE request_id=? ORDER BY ban_sach_id',[$id])->fetchAll(PDO::FETCH_COLUMN);
     $count=(int)Input::query($this->db,"SELECT COUNT(*) FROM loan_item i JOIN loan l USING(loan_id) JOIN borrow_request r USING(request_id) WHERE doc_gia_id=? AND i.status='borrowed'",[$reader['doc_gia_id']])->fetchColumn();
     if(count($copies)>(int)$p['borrow_per_request']||$count+count($copies)>(int)$p['borrow_total'])throw new ApiException(422,'BORROW_LIMIT','Vượt hạn mức mượn.');
-    Input::query($this->db,'INSERT INTO loan(request_id,handed_over_by,handed_over_at) VALUES (?,?,UTC_TIMESTAMP())',[$id,$actor['tai_khoan_id']]);$loan=(int)$this->db->lastInsertId();$due=Input::date($this->today())->modify('+'.(int)$p['borrow_days'].' days')->format('Y-m-d');
+    if($actor['vai_tro']!=='librarian')throw new ApiException(403,'FORBIDDEN','Chỉ thủ thư được bàn giao sách.');
+    $value=$dates['borrowed_at']??'';
+    $zone=new DateTimeZone('Asia/Ho_Chi_Minh');
+    $format='Y-m-d\TH:i';
+    $borrowed=is_string($value)&&preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D',$value)?DateTimeImmutable::createFromFormat('!'.$format,$value,$zone):false;
+    if(!$borrowed || $borrowed->format($format)!==$value || $borrowed>new DateTimeImmutable('now',$zone))throw new ApiException(422,'INVALID_HANDOVER','Ngày giờ mượn không hợp lệ hoặc ở tương lai.');
+    $due=Input::date($dates['due_date']??'')->format('Y-m-d');
+    if($due<$borrowed->format('Y-m-d'))throw new ApiException(422,'INVALID_DUE','Hạn trả phải từ ngày mượn trở đi.');
+    $utc=$borrowed->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+    Input::query($this->db,'INSERT INTO loan(request_id,handed_over_by,handed_over_at) VALUES (?,?,?)',[$id,$actor['tai_khoan_id'],$utc]);
+    $loan=(int)$this->db->lastInsertId();
     foreach($copies as $copy){$b=Input::query($this->db,'SELECT b.*,s.dang_luu_hanh book_active FROM ban_sach b JOIN sach s USING(sach_id) WHERE ban_sach_id=? FOR UPDATE',[$copy])->fetch();if(!$b||!$b['book_active']||!$b['dang_luu_hanh']||$b['tinh_trang']!=='available')throw new ApiException(409,'COPY_UNAVAILABLE','Bản sách không còn khả dụng; chưa bàn giao.');Input::query($this->db,"UPDATE ban_sach SET tinh_trang='borrowed' WHERE ban_sach_id=?",[$copy]);Input::query($this->db,'INSERT INTO loan_item(loan_id,ban_sach_id,due_date) VALUES (?,?,?)',[$loan,$copy,$due]);}
     Input::query($this->db,"UPDATE borrow_request SET status='handed_over' WHERE request_id=?",[$id]);
    }else{
     $status=['approve'=>'approved','reject'=>'rejected','cancel'=>'cancelled'][$action];if($r['status']===$status)return ['saved'=>true,'already_done'=>true];
     if(!in_array($r['status'],$action==='cancel'?['pending','approved']:['pending'],true))throw new ApiException(409,'INVALID_STATE','Yêu cầu đã được xử lý.');
+    if(($action==='reject' || ($action==='cancel' && $actor['vai_tro']!=='user')) && !(new ReaderService($this->db))->unpaidOverdue((int)$reader['doc_gia_id']))throw new ApiException(422,'NO_OVERDUE_DEBT','Độc giả không có nợ phạt quá hạn.');
     if($action==='approve')$this->eligible((int)$reader['doc_gia_id']);
     Input::query($this->db,'UPDATE borrow_request SET status=?,reviewed_by=?,reviewed_at=UTC_TIMESTAMP() WHERE request_id=?',[$status,$actor['tai_khoan_id'],$id]);
     if($action!=='cancel')$this->notify($owner,$action==='approve'?'borrow-approved':'borrow-rejected','request:'.$id,$action==='approve'?'Yêu cầu mượn đã được duyệt':'Yêu cầu mượn bị từ chối');
